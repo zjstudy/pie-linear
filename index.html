@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="./js/echarts.min.js"></script>
+</head>
+<body>
+    <!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+    <div id="main" style="width: 600px;height:400px;"></div>
+</body>
+
+<script type="module">
+  // util下的文件是直接用的d3-shape的文件 https://github.com/d3/d3-shape/blob/main/src/pie.js
+  import pie from "./util/pie.js"
+
+  // 数据数组
+  const data = [2,3,4,5,6]
+  // 颜色数组
+  const color = [
+    {
+      r: 21,
+      g: 118,
+      b: 210
+    },
+    {
+      r: 209,
+      g: 74,
+      b: 130
+    },
+    {
+      r: 38,
+      g: 193,
+      b: 242
+    },
+    {
+      r: 161,
+      g: 102,
+      b: 255
+    },
+    {
+      r: 18,
+      g: 113,
+      b: 204
+    }
+  ]
+  // 格式化数据，得到具有旋转角度的数组
+  const newData = pie()(data)
+
+
+  // 基于准备好的dom，初始化echarts实例
+  const myChart = echarts.init(document.getElementById('main'))
+
+  // 指定图表的配置项和数据
+  const option = {
+    tooltip: {
+      trigger: 'item'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 'bottom',
+      textStyle: {
+        width: 10
+      }
+    },
+    series: [
+      {
+        type: 'pie',
+        radius: ['40%', '60%'],
+        label: {
+          formatter: '{d}%'
+        },
+        labelLine: {
+          length: 35,
+        },
+        data: setGradientColorInItemSyle(newData, color, 0, 1)
+      }
+    ]
+  }
+
+
+  /**
+   * 线性渐变起止方向的计算方法
+   *
+   *
+   * @param {*} startArc 开始角度
+   * @param {*} endArc 结束角度
+   * @returns 四个坐标 x,y,x2,y2
+   */
+  function getCoordinates(startArc, endArc) {
+    const posi = [
+      Math.sin(startArc),
+      -Math.cos(startArc),
+      Math.sin(endArc),
+      -Math.cos(endArc)
+    ]
+    const dx = posi[2] - posi[0]
+    const dy = posi[3] - posi[1]
+
+    return getLocation(dx, dy)
+  }
+
+  function getLocation(dx, dy) {
+    const tanV = dx / dy
+    const directSign = Math.abs(tanV) < 1
+    const t = directSign ? tanV : 1 / tanV
+
+    const sign1 = t > 0 ? 1 : -1
+    const sign2 = dx > 0 ? 1 : -1
+    const sign = directSign ? sign1 * sign2 : sign2
+
+    const group1 = [ 0.5 - sign * t / 2, 0.5 + sign * t / 2]
+    const group2 = sign > 0 ? [0, 1] : [1, 0]
+    const group = [...group1, ...group2]
+    const keys = directSign ? ['x', 'x2', 'y', 'y2'] : ['y', 'y2', 'x', 'x2' ]
+
+    const res = {}
+    keys.forEach((k, idx) => {
+      res[k] = group[idx]
+    })
+    return res
+  }
+
+  /**
+   * 给数据写入 样式(线性渐变)
+   *
+   * @param {*} datas 数据
+   * @param {*} colorlist 颜色列表
+   * @param {*} startAlpha 开始颜色的透明度
+   * @param {*} endAlpha 结束颜色透的明度
+   * @returns 带样式的数据
+   */
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  function setGradientColorInItemSyle(datas, colorlist, startAlpha, endAlpha) {
+    for (let i = 0; i < datas.length; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      const color = colorlist[i];
+      const startArc = datas[i].startAngle;
+      const endArc = datas[i].endAngle;
+      // 这里计算了 线性渐变的起止方向
+      const coordinates = getCoordinates(startArc, endArc);
+      datas[i].itemStyle = {
+        color: {
+          ...coordinates,
+          "type": "linear",
+          "global": false,
+          // 这里给了 线性渐变的起止颜色
+          "colorStops": [{
+            offset: 0,
+            color: `rgba(${color.r}, ${color.g}, ${color.b}, ${startAlpha})`
+          }, {
+            offset: 1,
+            color: `rgba(${color.r}, ${color.g}, ${color.b}, ${endAlpha})`
+          }]
+        }
+      }
+    }
+    return datas
+  }
+
+
+  // 使用刚指定的配置项和数据显示图表。
+  myChart.setOption(option)
+</script>
+
+</html>
