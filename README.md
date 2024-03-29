@@ -12,7 +12,7 @@
 
 3.本项目参考 [玩转ECharts之实现“环形渐变”](https://zhuanlan.zhihu.com/p/183893861)(由于我看的时候文章中的链接均已失效，并且代码不是完全的，所以自己整了个完全的demo放出来)。
 
-原文里面没有讲如何获取开始角度（startArc）和结束角度（endArc）的计算方式，我后面找到d3的api里面是有这个计算方法的[d3.pie()]([https://d3js.org.cn/document/d3-shape/#pies](https://github.com/d3/d3-shape/blob/main/src/pie.js))，
+原文里面没有讲如何获取开始角度（startArc）和结束角度（endArc）的计算方式，我后面找到d3的api里面是有这个计算方法的[d3.pie()]([https://github.com/d3/d3-shape/blob/main/src/pie.js])，
 所以将d3的pie.js直接放在本地，就实现了通过数据计算开始角度和结束角度，然后通过角度计算渐变的坐标，就达到了多数据动态环形渐变的效果
 
 
